@@ -8,44 +8,23 @@ import * as THREE from 'three';
 
 const noise3D = createNoise3D();
 
-function computeCurl(x: number, y: number, z: number): THREE.Vector3 {
-  const eps = 0.0001;
-  const curl = new THREE.Vector3();
+function computeCurl(x: number, y: number, z: number, target: THREE.Vector3): void {
+  const eps = 0.001;
 
-  // Find rate of change in YZ plane
-  let n1 = noise3D(x, y + eps, z);
-  let n2 = noise3D(x, y - eps, z);
-  const a = (n1 - n2) / (2 * eps);
+  const n0 = noise3D(x, y, z);
+  const nx = noise3D(x + eps, y, z);
+  const ny = noise3D(x, y + eps, z);
+  const nz = noise3D(x, y, z + eps);
 
-  n1 = noise3D(x, y, z + eps);
-  n2 = noise3D(x, y, z - eps);
-  const b = (n1 - n2) / (2 * eps);
+  const dfdy = (ny - n0) / eps;
+  const dfdz = (nz - n0) / eps;
+  const dfdx = (nx - n0) / eps;
 
-  curl.x = a - b;
+  target.x = dfdy - dfdz;
+  target.y = dfdz - dfdx;
+  target.z = dfdx - dfdy;
 
-  // Find rate of change in XZ plane
-  n1 = noise3D(x, y, z + eps);
-  n2 = noise3D(x, y, z - eps);
-  const c = (n1 - n2) / (2 * eps);
-
-  n1 = noise3D(x + eps, y, z);
-  n2 = noise3D(x - eps, y, z);
-  const d = (n1 - n2) / (2 * eps);
-
-  curl.y = c - d;
-
-  // Find rate of change in XY plane
-  n1 = noise3D(x + eps, y, z);
-  n2 = noise3D(x - eps, y, z);
-  const e = (n1 - n2) / (2 * eps);
-
-  n1 = noise3D(x, y + eps, z);
-  n2 = noise3D(x, y - eps, z);
-  const f = (n1 - n2) / (2 * eps);
-
-  curl.z = e - f;
-
-  return curl.normalize();
+  target.normalize();
 }
 
 export { computeCurl };
